@@ -1,3 +1,6 @@
+# CMake build
+build/
+
 # Ignore editor artefacts
 /.dir-locals.el
 
