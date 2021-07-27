@@ -24,6 +24,12 @@ extern "C" {
  * OpenSSL was configured with the following options:
  */
 
+#ifndef OPENSSL_CONFIGURED_API
+# define OPENSSL_CONFIGURED_API (${OSSL_VERSION_MAJOR} * 10000 + ${OSSL_VERSION_MINOR} * 100)
+#endif
+#ifndef OPENSSL_API_COMPAT
+# define OPENSSL_API_COMPAT ${OSSL_API_COMPAT}
+#endif
 #ifndef OPENSSL_NO_RC5
 # define OPENSSL_NO_RC5
 #endif

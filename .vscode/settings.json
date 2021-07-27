@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "providercommon.h": "c"
+        "providercommon.h": "c",
+        "memory": "cpp"
     }
 }

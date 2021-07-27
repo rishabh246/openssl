@@ -85,11 +85,11 @@ static int rsa_multiprime_keygen(RSA *rsa, int bits, int primes,
     unsigned long error = 0;
     int ok = -1;
 
-    if (bits < RSA_MIN_MODULUS_BITS) {
-        ok = 0;             /* we set our own err */
-        ERR_raise(ERR_LIB_RSA, RSA_R_KEY_SIZE_TOO_SMALL);
-        goto err;
-    }
+    // if (bits < RSA_MIN_MODULUS_BITS) {
+    //     ok = 0;             /* we set our own err */
+    //     ERR_raise(ERR_LIB_RSA, RSA_R_KEY_SIZE_TOO_SMALL);
+    //     goto err;
+    // }
 
     /* A bad value for e can cause infinite loops */
     if (e_value != NULL && !ossl_rsa_check_public_exponent(e_value)) {

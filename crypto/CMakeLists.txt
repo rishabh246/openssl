@@ -58,8 +58,8 @@ configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/dso_conf.h.cmake
   ${PROJECT_BINARY_DIR}/include/crypto/dso_conf.h )
 
 set( LIBSRC
-  cpt_err.c cpuid.c cryptlib.c ctype.c cversion.c ebcdic.c ex_data.c init.c initthread.c
-  mem.c mem_clr.c mem_sec.c o_dir.c o_fopen.c o_init.c o_str.c o_time.c uid.c trace.c getenv.c )
+  context.c core_algorithm.c core_fetch.c core_namemap.c cpt_err.c cpuid.c cryptlib.c ctype.c cversion.c ebcdic.c ex_data.c init.c initthread.c
+  mem.c mem_clr.c mem_sec.c o_dir.c o_fopen.c o_init.c o_str.c o_time.c provider.c provider_core.c provider_predefined.c sparse_array.c trace.c uid.c getenv.c )
 
 include_directories( BEFORE SYSTEM
   modes ec/curve448 ec/curve448/arch_32
@@ -170,7 +170,9 @@ add_submodule ( engine eng_all.c eng_cnf.c eng_ctrl.c eng_dyn.c eng_err.c
   eng_table.c tb_asnmth.c tb_cipher.c tb_dh.c tb_digest.c tb_dsa.c tb_eckey.c tb_pkmeth.c
   tb_rand.c tb_rsa.c )
 
-add_submodule ( err err.c err_all.c err_prn.c )
+file(GLOB ERR_SRC RELATIVE ${CMAKE_CURRENT_LIST_DIR}/err ${CMAKE_CURRENT_LIST_DIR}/err/*.c)
+list(REMOVE_ITEM ERR_SRC "err_all_legacy.c")
+add_submodule ( err ${ERR_SRC} )
 
 file(GLOB ESS_SRC RELATIVE ${CMAKE_CURRENT_LIST_DIR}/ess ${CMAKE_CURRENT_LIST_DIR}/ess/*.c)
 add_submodule (ess ${ESS_SRC})
@@ -221,6 +223,12 @@ add_submodule (poly1305 ${POLY1305_SRC})
 
 file(GLOB PROP_SRC RELATIVE ${CMAKE_CURRENT_LIST_DIR}/property ${CMAKE_CURRENT_LIST_DIR}/property/*.c)
 add_submodule (property ${PROP_SRC})
+
+file(GLOB PROV_COMM_SRC RELATIVE ${CMAKE_BINARY_DIR}/providers ${CMAKE_BINARY_DIR}/providers/common/*.c)
+file(GLOB PROV_COMM_SRC RELATIVE ${CMAKE_BINARY_DIR}/providers ${CMAKE_BINARY_DIR}/providers/common/*.c)
+set(PROV_RANDS_SRC implementations/rands/seeding/rand_unix.c)
+list(REMOVE_ITEM PROV_COMM_SRC "common/securitycheck_fips.c") # NO fips
+add_submodule (../providers ${PROV_COMM_SRC} ${PROV_RANDS_SRC} baseprov.c defltprov.c)
 
 file(GLOB RAND_SRC RELATIVE ${CMAKE_CURRENT_LIST_DIR}/rand ${CMAKE_CURRENT_LIST_DIR}/rand/*.c)
 add_submodule (rand ${RAND_SRC})

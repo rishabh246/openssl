@@ -12,6 +12,8 @@
 #include "internal/cryptlib.h"
 #include "bn_local.h"
 
+#include <klee/klee.h>
+
 /*
  * The quick sieve algorithm approach to weeding out primes is Philip
  * Zimmermann's, as implemented in PGP.  I have had a read of his comments
@@ -163,6 +165,8 @@ int BN_generate_prime_ex2(BIGNUM *ret, int bits, int safe,
         if (!probable_prime_dh(ret, bits, safe, mods, add, rem, ctx))
             goto err;
     }
+
+    klee_set_taint(1, ret->d, sizeof(*ret->d) * bits / 8);
 
     if (!BN_GENCB_call(cb, 0, c1++))
         /* aborted */
