@@ -58,8 +58,9 @@ configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/dso_conf.h.cmake
   ${PROJECT_BINARY_DIR}/include/crypto/dso_conf.h )
 
 set( LIBSRC
-  context.c core_algorithm.c core_fetch.c core_namemap.c cpt_err.c cpuid.c cryptlib.c ctype.c cversion.c ebcdic.c ex_data.c init.c initthread.c
-  mem.c mem_clr.c mem_sec.c o_dir.c o_fopen.c o_init.c o_str.c o_time.c provider.c provider_core.c provider_predefined.c sparse_array.c trace.c uid.c getenv.c )
+  asn1_dsa.c bsearch.c context.c core_algorithm.c core_fetch.c core_namemap.c cpt_err.c cpuid.c cryptlib.c ctype.c cversion.c ebcdic.c ex_data.c init.c
+  initthread.c mem.c mem_clr.c mem_sec.c o_dir.c o_fopen.c o_init.c o_str.c o_time.c packet.c param_build.c param_build_set.c params_dup.c params_from_text.c
+  params.c provider.c provider_child.c provider_conf.c provider_core.c provider_predefined.c self_test_core.c sparse_array.c trace.c uid.c getenv.c )
 
 include_directories( BEFORE SYSTEM
   modes ec/curve448 ec/curve448/arch_32
@@ -151,7 +152,7 @@ add_submodule ( des cbc_cksm.c cbc_enc.c cfb64ede.c cfb64enc.c cfb_enc.c des_enc
 file(GLOB DH_SRC RELATIVE ${CMAKE_CURRENT_LIST_DIR}/dh ${CMAKE_CURRENT_LIST_DIR}/dh/*.c)
 add_submodule (dh ${DH_SRC})
 
-add_submodule ( dsa dsa_ameth.c dsa_asn1.c dsa_depr.c dsa_err.c dsa_gen.c dsa_key.c
+add_submodule ( dsa dsa_ameth.c dsa_asn1.c dsa_backend.c dsa_check.c dsa_depr.c dsa_err.c dsa_gen.c dsa_key.c
   dsa_lib.c dsa_meth.c dsa_ossl.c dsa_pmeth.c dsa_prn.c dsa_sign.c dsa_vrf.c )
 
 add_submodule ( dso dso_dl.c dso_dlfcn.c dso_err.c dso_lib.c dso_openssl.c dso_vms.c
@@ -164,6 +165,10 @@ list(FILTER EC_SRC EXCLUDE REGEX "ecp_nist[a-z0-9_]+.c$") # NO asm
 list(FILTER EC_SRC EXCLUDE REGEX "[a-z0-9_]+ppc[a-z0-9_]+.c$") # NO ppc
 list(FILTER EC_SRC EXCLUDE REGEX "[a-z0-9_]+s390[a-z0-9_]+.c$") # NO s390
 add_submodule (ec ${EC_SRC} ${EC_CURVE_SRC} ${EC_CURVE_ARCH_SRC})
+
+
+file(GLOB ENC_DEC_SRC RELATIVE ${CMAKE_CURRENT_LIST_DIR}/encode_decode ${CMAKE_CURRENT_LIST_DIR}/encode_decode/*.c)
+add_submodule (encode_decode ${ENC_DEC_SRC})
 
 add_submodule ( engine eng_all.c eng_cnf.c eng_ctrl.c eng_dyn.c eng_err.c
   eng_fat.c eng_init.c eng_lib.c eng_list.c eng_openssl.c eng_pkey.c eng_rdrand.c
@@ -179,6 +184,9 @@ add_submodule (ess ${ESS_SRC})
 
 file(GLOB EVP_SRC RELATIVE ${CMAKE_CURRENT_LIST_DIR}/evp ${CMAKE_CURRENT_LIST_DIR}/evp/*.c)
 add_submodule (evp ${EVP_SRC})
+
+file(GLOB FFC_SRC RELATIVE ${CMAKE_CURRENT_LIST_DIR}/ffc ${CMAKE_CURRENT_LIST_DIR}/ffc/*.c)
+add_submodule (ffc ${FFC_SRC})
 
 file(GLOB HMAC_SRC RELATIVE ${CMAKE_CURRENT_LIST_DIR}/hmac ${CMAKE_CURRENT_LIST_DIR}/hmac/*.c)
 add_submodule (hmac ${HMAC_SRC})
@@ -224,11 +232,41 @@ add_submodule (poly1305 ${POLY1305_SRC})
 file(GLOB PROP_SRC RELATIVE ${CMAKE_CURRENT_LIST_DIR}/property ${CMAKE_CURRENT_LIST_DIR}/property/*.c)
 add_submodule (property ${PROP_SRC})
 
+# TODO: Move providers to a different cmake module
 file(GLOB PROV_COMM_SRC RELATIVE ${CMAKE_BINARY_DIR}/providers ${CMAKE_BINARY_DIR}/providers/common/*.c)
-file(GLOB PROV_COMM_SRC RELATIVE ${CMAKE_BINARY_DIR}/providers ${CMAKE_BINARY_DIR}/providers/common/*.c)
-set(PROV_RANDS_SRC implementations/rands/seeding/rand_unix.c)
+file(GLOB PROV_CIPHERS_SRC RELATIVE ${CMAKE_BINARY_DIR}/providers ${CMAKE_BINARY_DIR}/providers/implementations/ciphers/*.c)
+file(GLOB PROV_DIGESTS_SRC RELATIVE ${CMAKE_BINARY_DIR}/providers ${CMAKE_BINARY_DIR}/providers/implementations/digests/*.c)
+file(GLOB PROV_ENC_DEC_SRC RELATIVE ${CMAKE_BINARY_DIR}/providers ${CMAKE_BINARY_DIR}/providers/implementations/encode_decode/*.c)
+file(GLOB PROV_EXCHANGE_SRC RELATIVE ${CMAKE_BINARY_DIR}/providers ${CMAKE_BINARY_DIR}/providers/implementations/exchange/*.c)
+file(GLOB PROV_KDFS_SRC RELATIVE ${CMAKE_BINARY_DIR}/providers ${CMAKE_BINARY_DIR}/providers/implementations/kdfs/*.c)
+file(GLOB PROV_KEM_SRC RELATIVE ${CMAKE_BINARY_DIR}/providers ${CMAKE_BINARY_DIR}/providers/implementations/kem/*.c)
+file(GLOB PROV_KEYMGMT_SRC RELATIVE ${CMAKE_BINARY_DIR}/providers ${CMAKE_BINARY_DIR}/providers/implementations/keymgmt/*.c)
+file(GLOB PROV_MACS_SRC RELATIVE ${CMAKE_BINARY_DIR}/providers ${CMAKE_BINARY_DIR}/providers/implementations/macs/*.c)
+file(GLOB PROV_RANDS_SRC RELATIVE ${CMAKE_BINARY_DIR}/providers ${CMAKE_BINARY_DIR}/providers/implementations/rands/*.c)
+file(GLOB PROV_RANDS_SEED_SRC RELATIVE ${CMAKE_BINARY_DIR}/providers ${CMAKE_BINARY_DIR}/providers/implementations/rands/seeding/*.c)
+# file(GLOB PROV_SIG_SRC RELATIVE ${CMAKE_BINARY_DIR}/providers ${CMAKE_BINARY_DIR}/providers/implementations/signature/dsa_sig.c)
+file(GLOB PROV_STOREMGMT_SRC RELATIVE ${CMAKE_BINARY_DIR}/providers ${CMAKE_BINARY_DIR}/providers/implementations/storemgmt/*.c)
+list(REMOVE_ITEM PROV_KDFS_SRC "implementations/kdfs/x942kdf.c") # NO x942
+list(REMOVE_ITEM PROV_RANDS_SEED_SRC "implementations/rands/seeding/rand_vms.c") # NO vms for rand
+list(REMOVE_ITEM PROV_RANDS_SEED_SRC "implementations/rands/seeding/rand_vxworks.c") # NO vxworks for rand
+list(REMOVE_ITEM PROV_RANDS_SEED_SRC "implementations/rands/seeding/rand_win.c") # NO win for rand
+list(FILTER PROV_MACS_SRC EXCLUDE REGEX "blake2[a-z0-9_]+.c$") # NO blake2
+# list(REMOVE_ITEM PROV_SIG_SRC "implementations/kdfs/x942kdf.c")
+set(PROV_SIG_SRC "")
+# set(PROV_RANDS_SRC
+#     implementations/rands/seeding/rand_unix.c
+#     implementations/rands/crngt.c
+#     implementations/rands/drbg.c
+#     implementations/rands/drbg_ctr.c
+#     implementations/rands/drbg_hash.c
+#     implementations/rands/drbg_hmac.c
+#     implementations/rands/seed_src.c
+#     ${PROV_CIPHERS_SRC})
+# message(STATUS ${PROV_RANDS_SRC})
 list(REMOVE_ITEM PROV_COMM_SRC "common/securitycheck_fips.c") # NO fips
-add_submodule (../providers ${PROV_COMM_SRC} ${PROV_RANDS_SRC} baseprov.c defltprov.c)
+add_submodule (../providers ${PROV_COMM_SRC} ${PROV_CIPHERS_SRC} ${PROV_DIGESTS} ${PROV_ENC_DEC} ${PROV_EXCHANGE_SRC} ${PROV_KDFS_SRC}
+                            ${PROV_KEM_SRC} ${PROV_KEYMGMT_SRC} ${PROV_MACS_SRC}  ${PROV_RANDS_SRC} ${PROV_RANDS_SEED_SRC} ${PROV_SIG_SRC} ${PROV_STOREMGMT_SRC}
+                            baseprov.c defltprov.c prov_running.c)
 
 file(GLOB RAND_SRC RELATIVE ${CMAKE_CURRENT_LIST_DIR}/rand ${CMAKE_CURRENT_LIST_DIR}/rand/*.c)
 add_submodule (rand ${RAND_SRC})
@@ -303,7 +341,8 @@ set(CRYPTO_INCLUDES
     ${PROJECT_SOURCE_DIR}/crypto
     ${PROJECT_BINARY_DIR}/include
     ${PROJECT_BINARY_DIR}/providers/common/include
-    ${PROJECT_BINARY_DIR}/providers/implementations/include)
+    ${PROJECT_BINARY_DIR}/providers/implementations/include
+    ${PROJECT_BINARY_DIR}/providers/implementations/include/prov)
 
 if (DEFINED KLEE_INCLUDE_DIR)
   set(CRYPTO_INCLUDES ${CRYPTO_INCLUDES} ${KLEE_INCLUDE_DIR})

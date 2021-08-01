@@ -30,9 +30,6 @@ extern "C" {
 #ifndef OPENSSL_API_COMPAT
 # define OPENSSL_API_COMPAT ${OSSL_API_COMPAT}
 #endif
-#ifndef OPENSSL_NO_RC5
-# define OPENSSL_NO_RC5
-#endif
 #ifndef OPENSSL_THREADS
 # define OPENSSL_THREADS
 #endif

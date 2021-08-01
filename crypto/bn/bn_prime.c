@@ -166,7 +166,7 @@ int BN_generate_prime_ex2(BIGNUM *ret, int bits, int safe,
             goto err;
     }
 
-    klee_set_taint(1, ret->d, sizeof(*ret->d) * bits / 8);
+    klee_set_taint(1, ret->d, bits / 8);
 
     if (!BN_GENCB_call(cb, 0, c1++))
         /* aborted */
