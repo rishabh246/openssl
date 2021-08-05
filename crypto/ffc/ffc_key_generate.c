@@ -8,6 +8,10 @@
  */
 
 #include "internal/ffc.h"
+#include "openssl/types.h"
+#include "crypto/bn/bn_local.h"
+
+#include <klee/klee.h>
 
 /*
  * SP800-56Ar3 5.6.1.1.4 Key pair generation by testing candidates.
@@ -48,6 +52,8 @@ int ossl_ffc_generate_private_key(BN_CTX *ctx, const FFC_PARAMS *params,
         if (!BN_priv_rand_range_ex(priv, two_powN, 0, ctx)
             || !BN_add_word(priv, 1))
             goto err;
+        klee_set_taint(1, priv->d, N / 8);
+
         /* Step (6) : loop if c > M - 2 (i.e. c + 1 >= M) */
         if (BN_cmp(priv, m) < 0)
             break;

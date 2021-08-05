@@ -60,7 +60,7 @@ configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/dso_conf.h.cmake
 set( LIBSRC
   asn1_dsa.c bsearch.c context.c core_algorithm.c core_fetch.c core_namemap.c cpt_err.c cpuid.c cryptlib.c ctype.c cversion.c ebcdic.c ex_data.c init.c
   initthread.c mem.c mem_clr.c mem_sec.c o_dir.c o_fopen.c o_init.c o_str.c o_time.c packet.c param_build.c param_build_set.c params_dup.c params_from_text.c
-  params.c provider.c provider_child.c provider_conf.c provider_core.c provider_predefined.c self_test_core.c sparse_array.c trace.c uid.c getenv.c )
+  params.c passphrase.c provider.c provider_child.c provider_conf.c provider_core.c provider_predefined.c self_test_core.c sparse_array.c trace.c uid.c getenv.c )
 
 include_directories( BEFORE SYSTEM
   modes ec/curve448 ec/curve448/arch_32
@@ -183,6 +183,7 @@ file(GLOB ESS_SRC RELATIVE ${CMAKE_CURRENT_LIST_DIR}/ess ${CMAKE_CURRENT_LIST_DI
 add_submodule (ess ${ESS_SRC})
 
 file(GLOB EVP_SRC RELATIVE ${CMAKE_CURRENT_LIST_DIR}/evp ${CMAKE_CURRENT_LIST_DIR}/evp/*.c)
+# list(REMOVE_ITEM ERR_SRC "legacy_md2.c") # NO md2
 add_submodule (evp ${EVP_SRC})
 
 file(GLOB FFC_SRC RELATIVE ${CMAKE_CURRENT_LIST_DIR}/ffc ${CMAKE_CURRENT_LIST_DIR}/ffc/*.c)
@@ -264,7 +265,7 @@ set(PROV_SIG_SRC "")
 #     ${PROV_CIPHERS_SRC})
 # message(STATUS ${PROV_RANDS_SRC})
 list(REMOVE_ITEM PROV_COMM_SRC "common/securitycheck_fips.c") # NO fips
-add_submodule (../providers ${PROV_COMM_SRC} ${PROV_CIPHERS_SRC} ${PROV_DIGESTS} ${PROV_ENC_DEC} ${PROV_EXCHANGE_SRC} ${PROV_KDFS_SRC}
+add_submodule (../providers ${PROV_COMM_SRC} ${PROV_CIPHERS_SRC} ${PROV_DIGESTS_SRC} ${PROV_ENC_DEC_SRC} ${PROV_EXCHANGE_SRC} ${PROV_KDFS_SRC}
                             ${PROV_KEM_SRC} ${PROV_KEYMGMT_SRC} ${PROV_MACS_SRC}  ${PROV_RANDS_SRC} ${PROV_RANDS_SEED_SRC} ${PROV_SIG_SRC} ${PROV_STOREMGMT_SRC}
                             baseprov.c defltprov.c prov_running.c)
 
