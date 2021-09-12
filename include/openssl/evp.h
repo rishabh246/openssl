@@ -1380,6 +1380,7 @@ int EVP_PKEY_up_ref(EVP_PKEY *pkey);
 EVP_PKEY *EVP_PKEY_dup(EVP_PKEY *pkey);
 void EVP_PKEY_free(EVP_PKEY *pkey);
 const char *EVP_PKEY_get0_description(const EVP_PKEY *pkey);
+const OSSL_PROVIDER *EVP_PKEY_get0_provider(const EVP_PKEY *key);
 
 EVP_PKEY *d2i_PublicKey(int type, EVP_PKEY **a, const unsigned char **pp,
                         long length);
@@ -2116,11 +2117,11 @@ OSSL_DEPRECATEDIN_3_0 void EVP_PKEY_meth_get_ctrl
      int (**pctrl_str) (EVP_PKEY_CTX *ctx, const char *type,
                         const char *value));
 OSSL_DEPRECATEDIN_3_0 void EVP_PKEY_meth_get_digestsign
-    (EVP_PKEY_METHOD *pmeth,
+    (const EVP_PKEY_METHOD *pmeth,
      int (**digestsign) (EVP_MD_CTX *ctx, unsigned char *sig, size_t *siglen,
                          const unsigned char *tbs, size_t tbslen));
 OSSL_DEPRECATEDIN_3_0 void EVP_PKEY_meth_get_digestverify
-    (EVP_PKEY_METHOD *pmeth,
+    (const EVP_PKEY_METHOD *pmeth,
      int (**digestverify) (EVP_MD_CTX *ctx, const unsigned char *sig,
                            size_t siglen, const unsigned char *tbs,
                            size_t tbslen));
@@ -2131,7 +2132,7 @@ OSSL_DEPRECATEDIN_3_0 void EVP_PKEY_meth_get_public_check
 OSSL_DEPRECATEDIN_3_0 void EVP_PKEY_meth_get_param_check
     (const EVP_PKEY_METHOD *pmeth, int (**pcheck) (EVP_PKEY *pkey));
 OSSL_DEPRECATEDIN_3_0 void EVP_PKEY_meth_get_digest_custom
-    (EVP_PKEY_METHOD *pmeth,
+    (const EVP_PKEY_METHOD *pmeth,
      int (**pdigest_custom) (EVP_PKEY_CTX *ctx, EVP_MD_CTX *mctx));
 # endif
 
@@ -2160,7 +2161,8 @@ int EVP_PKEY_get_group_name(const EVP_PKEY *pkey, char *name, size_t name_sz,
                             size_t *gname_len);
 
 OSSL_LIB_CTX *EVP_PKEY_CTX_get0_libctx(EVP_PKEY_CTX *ctx);
-const char *EVP_PKEY_CTX_get0_propq(EVP_PKEY_CTX *ctx);
+const char *EVP_PKEY_CTX_get0_propq(const EVP_PKEY_CTX *ctx);
+const OSSL_PROVIDER *EVP_PKEY_CTX_get0_provider(const EVP_PKEY_CTX *ctx);
 
 # ifdef  __cplusplus
 }

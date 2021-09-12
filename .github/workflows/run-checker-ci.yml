@@ -1,4 +1,3 @@
-
 # Jobs run per pull request submission
 name: Run-checker CI
 on: [pull_request, push]
@@ -31,7 +30,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: config
-      run: CC=clang ./config --banner=Configured --strict-warnings ${{ matrix.opt }} && perl configdata.pm --dump
+      run: CC=clang ./config --banner=Configured --strict-warnings ${{ matrix.opt }}
+    - name: config dump
+      run: ./configdata.pm --dump
     - name: make
       run: make -s -j4
     - name: make test

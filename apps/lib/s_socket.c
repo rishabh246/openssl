@@ -27,12 +27,12 @@ typedef unsigned int u_int;
 #endif
 
 #ifdef _WIN32
-/*
- * With MSVC, certain POSIX functions have been renamed to have an underscore
- * prefix.
- */
 # include <process.h>
-# define getpid _getpid
+
+/* MSVC renamed some POSIX functions to have an underscore prefix. */
+# ifdef _MSC_VER
+#  define getpid _getpid
+# endif
 #endif
 
 #ifndef OPENSSL_NO_SOCK
@@ -171,6 +171,8 @@ int init_client(int *sock, const char *host, const char *port,
         /* Success, don't try any more addresses */
         break;
     }
+
+    BIO_printf(bio_out, "Connecting to %s\n", BIO_ADDR_hostname_string(BIO_ADDRINFO_address(ai), 1));
 
     if (*sock == INVALID_SOCKET) {
         if (bindaddr != NULL && !found) {

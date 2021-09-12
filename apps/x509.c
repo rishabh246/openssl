@@ -61,7 +61,7 @@ const OPTIONS x509_options[] = {
     {"help", OPT_HELP, '-', "Display this summary"},
 
     {"in", OPT_IN, '<',
-     "Certificate input (default stdin), or CSR input file with -req"},
+     "Certificate input, or CSR input file with -req (default stdin)"},
     {"passin", OPT_PASSIN, 's', "Private key and cert file pass-phrase source"},
     {"new", OPT_NEW, '-', "Generate a certificate from scratch"},
     {"x509toreq", OPT_X509TOREQ, '-',
@@ -73,7 +73,7 @@ const OPTIONS x509_options[] = {
      "CSR input file format (DER or PEM) - default PEM"},
     {"vfyopt", OPT_VFYOPT, 's', "CSR verification parameter in n:v form"},
     {"key", OPT_KEY, 's',
-     "Key to be used in certificate or cert request"},
+     "Key for signing, and to include unless using -force_pubkey"},
     {"signkey", OPT_SIGNKEY, 's',
      "Same as -key"},
     {"keyform", OPT_KEYFORM, 'E',
@@ -190,9 +190,7 @@ static void warn_copying(ASN1_OBJECT *excluded, const char *names)
                    sn);
 }
 
-static X509_REQ *x509_to_req(X509 *cert, EVP_PKEY *pkey, const char *digest,
-                             STACK_OF(OPENSSL_STRING) *sigopts,
-                             int ext_copy, const char *names)
+static X509_REQ *x509_to_req(X509 *cert, int ext_copy, const char *names)
 {
     const STACK_OF(X509_EXTENSION) *cert_exts = X509_get0_extensions(cert);
     int i, n = sk_X509_EXTENSION_num(cert_exts /* may be NULL */);
@@ -228,8 +226,6 @@ static X509_REQ *x509_to_req(X509 *cert, EVP_PKEY *pkey, const char *digest,
             goto err;
         }
     }
-    if (!do_X509_REQ_sign(req, pkey, digest, sigopts))
-        goto err;
     sk_X509_EXTENSION_free(exts);
     return req;
 
@@ -634,7 +630,7 @@ int x509_main(int argc, char **argv)
         }
         if (privkeyfile == NULL && pubkeyfile == NULL) {
             BIO_printf(bio_err,
-                       "The -new option without -key requires using -force_pubkey\n");
+                       "The -new option requires using the -key or -force_pubkey option\n");
             goto end;
         }
     }
@@ -646,7 +642,7 @@ int x509_main(int argc, char **argv)
         CAkeyfile = CAfile;
     if (CAfile != NULL) {
         if (privkeyfile != NULL) {
-            BIO_printf(bio_err, "Cannot use both -key and -CA option\n");
+            BIO_printf(bio_err, "Cannot use both -key/-signkey and -CA option\n");
             goto end;
         }
     } else if (CAkeyfile != NULL) {
@@ -680,6 +676,9 @@ int x509_main(int argc, char **argv)
     }
 
     if (reqfile) {
+        if (infile == NULL)
+            BIO_printf(bio_err,
+                       "Warning: Reading cert request from stdin since no -in option is given\n");
         req = load_csr(infile, informat, "certificate request input");
         if (req == NULL)
             goto end;
@@ -729,6 +728,9 @@ int x509_main(int argc, char **argv)
             }
         }
     } else {
+        if (infile == NULL)
+            BIO_printf(bio_err,
+                       "Warning: Reading certificate from stdin since no -in option is given\n");
         x = load_cert_pass(infile, informat, 1, passin, "certificate");
         if (x == NULL)
             goto end;
@@ -804,7 +806,7 @@ int x509_main(int argc, char **argv)
     }
 
     X509V3_set_ctx(&ext_ctx, issuer_cert, x, req, NULL, X509V3_CTX_REPLACE);
-    if (extconf != NULL) {
+    if (extconf != NULL && !x509toreq) {
         X509V3_set_nconf(&ext_ctx, extconf);
         if (!X509V3_EXT_add_nconf(extconf, &ext_ctx, extsect, x)) {
             BIO_printf(bio_err,
@@ -823,15 +825,24 @@ int x509_main(int argc, char **argv)
 
     if (x509toreq) { /* also works in conjunction with -req */
         if (privkey == NULL) {
-            BIO_printf(bio_err, "Must specify request key using -key\n");
+            BIO_printf(bio_err, "Must specify request signing key using -key\n");
             goto end;
         }
         if (clrext && ext_copy != EXT_COPY_NONE) {
             BIO_printf(bio_err, "Must not use -clrext together with -copy_extensions\n");
             goto end;
         }
-        if ((rq = x509_to_req(x, privkey, digest, sigopts,
-                              ext_copy, ext_names)) == NULL)
+        if ((rq = x509_to_req(x, ext_copy, ext_names)) == NULL)
+            goto end;
+        if (extconf != NULL) {
+            X509V3_set_nconf(&ext_ctx, extconf);
+            if (!X509V3_EXT_REQ_add_nconf(extconf, &ext_ctx, extsect, rq)) {
+                BIO_printf(bio_err,
+                           "Error adding request extensions from section %s\n", extsect);
+                goto end;
+            }
+        }
+        if (!do_X509_REQ_sign(rq, privkey, digest, sigopts))
             goto end;
         if (!noout) {
             if (outformat == FORMAT_ASN1) {
