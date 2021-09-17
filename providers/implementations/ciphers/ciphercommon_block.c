@@ -153,8 +153,6 @@ int ossl_cipher_unpadblock(unsigned char *buf, size_t *buflen, size_t blocksize)
         *buflen = constant_time_select_s(gp & i_pad_lt, blocksize - i - 1, *buflen);
     }
 
-
-
     ERR_raise(ERR_LIB_PROV, PROV_R_BAD_DECRYPT);
     ERR_clear_last_constant_time(1 & gp);
 
