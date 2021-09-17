@@ -127,15 +127,33 @@ int ossl_cipher_unpadblock(unsigned char *buf, size_t *buflen, size_t blocksize)
      * The following assumes that the ciphertext has been authenticated.
      * Otherwise it provides a padding oracle.
      */
+    
+    /* The code below runs in constant-time. Here is the non-constant-time version
+    *    if (pad == 0 || pad > blocksize) {
+    *        ERR_raise(ERR_LIB_PROV, PROV_R_BAD_DECRYPT);
+    *        return 0;
+    *    }
+    *    for (i = 0; i < pad; i++) {
+    *        if (buf[--len] != pad) {
+    *            ERR_raise(ERR_LIB_PROV, PROV_R_BAD_DECRYPT);
+    *            return 0;
+    *        }
+    *    }
+    *    *buflen = len;
+    *    return 1;
+    */
+   
     pad = buf[blocksize - 1];
     gp = ~(constant_time_is_zero_s(pad) | constant_time_lt_s(blocksize, pad));
 
     for (i = 0; i < blocksize; i++) {
         i_pad_lt = constant_time_lt(i, pad);
-        buf_pad_eq = constant_time_eq_s(buf[len - i - 1], pad);
+        buf_pad_eq = constant_time_eq_s(buf[blocksize - i - 1], pad);
         gp = constant_time_select_s(i_pad_lt, gp & buf_pad_eq, gp);
-        *buflen = constant_time_select_s(gp & i_pad_lt, len - i - 1, *buflen);
+        *buflen = constant_time_select_s(gp & i_pad_lt, blocksize - i - 1, *buflen);
     }
+
+
 
     ERR_raise(ERR_LIB_PROV, PROV_R_BAD_DECRYPT);
     ERR_clear_last_constant_time(1 & gp);
