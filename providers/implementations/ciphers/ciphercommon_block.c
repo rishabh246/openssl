@@ -129,20 +129,20 @@ int ossl_cipher_unpadblock(unsigned char *buf, size_t *buflen, size_t blocksize)
      */
     
     /* The code below runs in constant-time. Here is the non-constant-time version
-    *    if (pad == 0 || pad > blocksize) {
-    *        ERR_raise(ERR_LIB_PROV, PROV_R_BAD_DECRYPT);
-    *        return 0;
-    *    }
-    *    for (i = 0; i < pad; i++) {
-    *        if (buf[--len] != pad) {
-    *            ERR_raise(ERR_LIB_PROV, PROV_R_BAD_DECRYPT);
-    *            return 0;
-    *        }
-    *    }
-    *    *buflen = len;
-    *    return 1;
-    */
-   
+     *    if (pad == 0 || pad > blocksize) {
+     *        ERR_raise(ERR_LIB_PROV, PROV_R_BAD_DECRYPT);
+     *        return 0;
+     *    }
+     *    for (i = 0; i < pad; i++) {
+     *        if (buf[--len] != pad) {
+     *            ERR_raise(ERR_LIB_PROV, PROV_R_BAD_DECRYPT);
+     *            return 0;
+     *        }
+     *    }
+     *    *buflen = len;
+     *    return 1;
+     */
+
     pad = buf[blocksize - 1];
     gp = ~(constant_time_is_zero_s(pad) | constant_time_lt_s(blocksize, pad));
 
