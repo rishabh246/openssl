@@ -132,6 +132,39 @@ int ossl_cipher_unpadblock(unsigned char *buf, size_t *buflen, size_t blocksize)
     }
     *buflen = len;
     return 1;
+
+    // CT version here. Comment out rest of the function to enable. Hacky for now
+    // size_t pad, i;
+    // size_t len = *buflen;
+    // size_t gp;
+    // size_t buf_pad_eq;
+    // unsigned int i_pad_lt;
+
+    // /* len and blocksize are public so they can be tested in non-constant time */
+    // if (len != blocksize) {
+    //     ERR_raise(ERR_LIB_PROV, ERR_R_INTERNAL_ERROR);
+    //     return 0;
+    // }
+
+    // /*
+    //  * The following assumes that the ciphertext has been authenticated.
+    //  * Otherwise it provides a padding oracle.
+    //  */
+
+    // pad = buf[blocksize - 1];
+    // gp = ~(constant_time_is_zero_s(pad) | constant_time_lt_s(blocksize, pad));
+
+    // for (i = 0; i < blocksize; i++) {
+    //     i_pad_lt = constant_time_lt(i, pad);
+    //     buf_pad_eq = constant_time_eq_s(buf[blocksize - i - 1], pad);
+    //     gp = constant_time_select_s(i_pad_lt, gp & buf_pad_eq, gp);
+    //     *buflen = constant_time_select_s(gp & i_pad_lt, blocksize - i - 1, *buflen);
+    // }
+
+    // ERR_raise(ERR_LIB_PROV, PROV_R_BAD_DECRYPT);
+    // ERR_clear_last_constant_time(1 & gp);
+
+    // return constant_time_select_int_s(gp, 1, 0);
 }
 
 /*-
