@@ -12,7 +12,8 @@ mkdir build
 cd build
 
 # Configure build for LLVM bitcode generation, also include bolt-taint
-cmake -DCMAKE_BUILD_TYPE=Debug -WITH_APPS=OFF -DLLVM_BITCODE_ONLY=ON -DCMAKE_C_COMPILER=/usr/bin/clang-8 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-8 -DCMAKE_LINKER=/usr/bin/llvm-link-8 -DKLEE_INCLUDE_DIR=../../../../include ..
+# You will need to install llvm-8 and clang-8 for this step
+cmake -DCMAKE_BUILD_TYPE=Debug -WITH_APPS=OFF -DLLVM_BITCODE_ONLY=ON -DCMAKE_C_COMPILER=$PATH_TO_CLANG -DCMAKE_CXX_COMPILER=$PATH_TO_CLANG++ -DCMAKE_LINKER=$PATH_TO_LLVM_LINK -DKLEE_INCLUDE_DIR=../../../../include ..
 
 # Build
 make -kj
